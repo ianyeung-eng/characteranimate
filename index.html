@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>🎈 神奇畫畫機</title>
+    <title>🎈 神奇畫畫動漫機 (直條框架 + A-pose動畫版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -91,16 +91,16 @@
 
     <div class="app-container">
         <div class="left-panel">
-            <h1>🎈 神奇畫畫機</h1>
+            <h1>🎈 神奇畫畫動漫機</h1>
             
             <div id="status-bar">
                 <div id="status-title">🎨 盡情畫畫吧！</div>
-                <div id="status-desc" class="instructions">照著灰色的影子，把手、腳、頭畫在彩色的虛線框裡面喔！(不要超線喔)</div>
+                <div id="status-desc" class="instructions">請照著灰色的影子，把手、腳、頭畫在彩色的虛線框框裡面喔！</div>
             </div>
 
             <div class="top-toolbar">
                 <button id="btnNext" class="main-btn" onclick="processAutoSlice()">✨ 畫好了，變魔法！</button>
-                <button id="btnAnimate" class="main-btn success" onclick="startAnimation()" style="display:none;">🏃 讓他跑起來吧！</button>
+                <button id="btnAnimate" class="main-btn success" onclick="startAnimation()" style="display:none;">🕺 讓他跳舞吧！</button>
                 <button id="btnExportGIF" class="main-btn purple" onclick="exportGIF()" style="display:none;">🚀 發送到電視大螢幕！</button>
             </div>
 
@@ -161,8 +161,7 @@
             projectId: "characterwall",
             storageBucket: "characterwall.firebasestorage.app",
             messagingSenderId: "378475799461",
-            appId: "1:378475799461:web:4775b4c857be19d5287e4c",
-            measurementId: "G-0JW0SL0844"
+            appId: "1:378475799461:web:4775b4c857be19d5287e4c"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -192,15 +191,14 @@
         const scaleSlider = document.getElementById('scale-slider');
         const selectedPartNameTxt = document.getElementById('selected-part-name');
 
-        // 🌟 重新計算的窄版 T-pose 座標 (中心為 X:400)
-        // 身體寬度從 160 縮窄為 120。手腳也跟著向中心靠攏，維持 100% 貼齊無縫隙。
+        // 🌟 核心還原：回復為簡單的「直條形狀」手腳框架，並維持精準對齊
         const REGIONS = {
             head:  { id: 'head',  name: '頭',   x: 320, y: 30,  w: 160, h: 160, px: 0.5,  py: 0.98, color: '#f44336' }, 
             torso: { id: 'torso', name: '身體', x: 340, y: 190, w: 120, h: 180, px: 0.5,  py: 0.5,  color: '#ff9800' }, 
-            lArm:  { id: 'lArm',  name: '右手', x: 150, y: 190, w: 190, h: 80,  px: 0.95, py: 0.5,  color: '#4caf50' }, // 貼齊 X:340
-            rArm:  { id: 'rArm',  name: '左手', x: 460, y: 190, w: 190, h: 80,  px: 0.05, py: 0.5,  color: '#2196f3' }, // 貼齊 X:460
-            lLeg:  { id: 'lLeg',  name: '右腳', x: 340, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#9c27b0' }, 
-            rLeg:  { id: 'rLeg',  name: '左腳', x: 405, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#e91e63' }  
+            lArm:  { id: 'lArm',  name: '右手', x: 150, y: 190, w: 190, h: 80,  px: 0.95, py: 0.5,  color: '#4caf50' }, // 直條狀
+            rArm:  { id: 'rArm',  name: '左手', x: 460, y: 190, w: 190, h: 80,  px: 0.05, py: 0.5,  color: '#2196f3' }, // 直條狀
+            lLeg:  { id: 'lLeg',  name: '右腳', x: 340, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#9c27b0' }, // 直條狀
+            rLeg:  { id: 'rLeg',  name: '左腳', x: 405, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#e91e63' }  // 直條狀
         };
         
         let sysMode = 'draw';
@@ -237,19 +235,13 @@
             c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
             c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r); c.closePath(); c.fill();
         }
-        function strokeRoundRect(c, x, y, w, h, r) {
-            c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
-            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
-            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
-            c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r); c.closePath(); c.stroke();
-        }
 
-        // 🌟 重新繪製的窄版灰色小人 (嚴格限制在框線內)
+        // 🌟 灰色小人還原為直條狀手腳，保留窄版身體
         function drawBackgroundMannequin() {
             bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
             bgCtx.fillStyle = '#e4e4e4'; 
 
-            // 1. 窄版身體 (貼齊 y:190~370, x:340~460)
+            // 1. 窄版身體
             bgCtx.beginPath();
             bgCtx.moveTo(350, 190); bgCtx.lineTo(450, 190);
             bgCtx.lineTo(450, 350); bgCtx.arcTo(450, 370, 430, 370, 20);
@@ -257,34 +249,22 @@
             bgCtx.fill();
 
             // 2. 頭部
-            bgCtx.fillRect(385, 160, 30, 30); // 脖子
+            bgCtx.fillRect(385, 160, 30, 30); 
             bgCtx.beginPath(); bgCtx.arc(400, 105, 55, 0, Math.PI*2); bgCtx.fill(); 
             bgCtx.beginPath(); bgCtx.arc(340, 105, 12, 0, Math.PI*2); bgCtx.fill(); 
             bgCtx.beginPath(); bgCtx.arc(460, 105, 12, 0, Math.PI*2); bgCtx.fill(); 
 
-            // 3. 右手 (貼齊右線 x=340)
-            bgCtx.beginPath();
-            bgCtx.moveTo(340, 200); bgCtx.lineTo(180, 200);
-            bgCtx.arcTo(160, 200, 160, 220, 20); bgCtx.arcTo(160, 240, 180, 240, 20);
-            bgCtx.lineTo(340, 240); bgCtx.fill();
+            // 3. 右手 (還原直條狀)
+            fillRoundRect(bgCtx, 160, 210, 180, 40, 20); 
 
-            // 4. 左手 (貼齊左線 x=460)
-            bgCtx.beginPath();
-            bgCtx.moveTo(460, 200); bgCtx.lineTo(620, 200);
-            bgCtx.arcTo(640, 200, 640, 220, 20); bgCtx.arcTo(640, 240, 620, 240, 20);
-            bgCtx.lineTo(460, 240); bgCtx.fill();
+            // 4. 左手 (還原直條狀)
+            fillRoundRect(bgCtx, 460, 210, 180, 40, 20); 
 
-            // 5. 右腳 (貼齊頂線 y=370)
-            bgCtx.beginPath();
-            bgCtx.moveTo(350, 370); bgCtx.lineTo(385, 370);
-            bgCtx.lineTo(385, 500); bgCtx.arcTo(385, 520, 365, 520, 20);
-            bgCtx.arcTo(350, 520, 350, 500, 20); bgCtx.fill();
+            // 5. 右腳 (還原直條狀)
+            fillRoundRect(bgCtx, 345, 370, 45, 150, 20); 
 
-            // 6. 左腳 (貼齊頂線 y=370)
-            bgCtx.beginPath();
-            bgCtx.moveTo(415, 370); bgCtx.lineTo(450, 370);
-            bgCtx.lineTo(450, 500); bgCtx.arcTo(450, 520, 430, 520, 20);
-            bgCtx.arcTo(415, 520, 415, 500, 20); bgCtx.fill();
+            // 6. 左腳 (還原直條狀)
+            fillRoundRect(bgCtx, 410, 370, 45, 150, 20); 
         }
 
         function drawGuides() {
@@ -301,7 +281,7 @@
                 refCtx.font = 'bold 20px "Comic Sans MS"';
                 refCtx.textAlign = 'left';
                 refCtx.textBaseline = 'top';
-                refCtx.fillText(r.name, r.x + 5, r.y + 5);
+                refCtx.fillText(r.name, r.x + 8, r.y + 8);
             }
         }
 
@@ -503,7 +483,7 @@
             pctx.clearRect(0,0,800,600);
             
             titleText.innerText = `🧩 魔法拼圖完成！`;
-            descText.innerHTML = `如果怪怪的，可以拖拉<b style="color:red">「紅色大靶心🎯」</b>調整關節！<br>沒問題就按下【讓他跑起來吧】！`;
+            descText.innerHTML = `如果怪怪的，可以拖拉<b style="color:red">「紅色大靶心🎯」</b>調整關節！<br>沒問題就按下【讓他跳舞吧】！`;
             
             btnNext.style.display = 'none'; 
             btnAnimate.style.display = 'block';
@@ -512,6 +492,7 @@
             renderAssembly();
         }
 
+        // 🌟 真空去背的基礎：確保切出來的圖沒有背景色
         function autoCropRegion(rx, ry, rw, rh) {
             const imgData = ctx.getImageData(rx, ry, rw, rh).data;
             let minX = rw, minY = rh, maxX = 0, maxY = 0, hasPixels = false;
@@ -583,13 +564,12 @@
             sysMode = 'animate';
             btnAnimate.style.display = 'none'; assembleDiv.style.display = 'none';
             btnExportGIF.style.display = 'block'; eventLayer.style.cursor = 'default';
-            titleText.innerText = `✨ 哇！跑起來了！✨`;
-            descText.innerText = `準備好就把他發送到電視大螢幕上跟大家一起玩！`;
+            titleText.innerText = `✨ 哇！活過來了！✨`;
+            descText.innerText = `點擊紫色按鈕，把它發送到電視大螢幕上跟大家一起玩！`;
 
-            // 為了跑步動態，稍微把整體往上提一點，給腳一點彈跳空間
             const torsoP = partsData.torso;
             const rootX = torsoP.x + torsoP.pivotX * torsoP.scale;
-            const rootY = torsoP.y + torsoP.pivotY * torsoP.scale - 20;
+            const rootY = torsoP.y + torsoP.pivotY * torsoP.scale;
 
             for (let key in partsData) {
                 let p = partsData[key];
@@ -601,12 +581,10 @@
             requestAnimationFrame(drawFrameLive);
         }
 
-        // 🌟 核心進化：專業級奔跑物理引擎 (Dynamic Run Cycle)
+        // 🌟 A-pose 下垂動畫核心
         function renderWalkCycleFrame(targetCtx, timeT) {
-            let speed = timeT * 2; // 提升速度變為跑步
-            let swing = Math.sin(speed); 
-            // 強烈的重力彈跳感 (跑起來身體會上下起伏)
-            let bounce = Math.abs(Math.sin(speed * 2)) * 18; 
+            let swing = Math.sin(timeT) * 0.6; 
+            let bounce = Math.abs(Math.sin(timeT * 2)) * 12; 
 
             const torsoP = partsData.torso;
             const rootX = torsoP.x + torsoP.pivotX * torsoP.scale;
@@ -620,37 +598,24 @@
             for (let key of drawOrder) {
                 let p = partsData[key];
                 let angle = 0;
-                let legSquash = 1; // 用來製作「假膝蓋彎曲」的 Y 軸壓縮比例
                 
-                // 1. 身體與頭部前傾
-                if (key === 'torso') angle = 0.15 + Math.sin(speed * 2) * 0.05; // 身體前傾 + 稍微扭動
-                if (key === 'head') angle = Math.sin(speed * 2) * 0.05; // 頭跟著晃動
-                
-                // 2. 雙手從 T-pose 放下，並誇張擺動
-                let baseArmAngle = 0;
-                if (key === 'lArm') baseArmAngle = -Math.PI * 0.45; // 放下左臂
-                if (key === 'rArm') baseArmAngle = Math.PI * 0.45;  // 放下右臂
+                // ★ 系統自動把橫畫的手變成下垂 (A-pose) ★
+                let armBaseAngle = 0;
+                if (key === 'lArm') armBaseAngle = -Math.PI * 0.45; 
+                if (key === 'rArm') armBaseAngle = Math.PI * 0.45;  
 
-                if (key === 'lArm') angle = baseArmAngle - (swing * 0.8);
-                if (key === 'rArm') angle = baseArmAngle + (swing * 0.8);
+                if (key === 'lArm') angle = armBaseAngle - swing;
+                if (key === 'rArm') angle = armBaseAngle + swing;
                 
-                // 3. 雙腳奔跑與「假彎曲 (Fake Knee Bend)」
-                if (key === 'lLeg') {
-                    angle = swing * 0.9;
-                    // 當腳往後拉時 (swing > 0)，Y軸縮短 20%，產生膝蓋彎曲的透視錯覺！
-                    if (swing > 0) legSquash = 1 - (swing * 0.2); 
-                }
-                if (key === 'rLeg') {
-                    angle = -swing * 0.9;
-                    if (swing < 0) legSquash = 1 - (Math.abs(swing) * 0.2);
-                }
+                if (key === 'lLeg') angle = swing;
+                if (key === 'rLeg') angle = -swing;
+                if (key === 'head') angle = Math.sin(timeT*2) * 0.05; 
+                if (key === 'torso') angle = Math.sin(timeT) * 0.05;  
 
                 targetCtx.save();
                 targetCtx.translate(currentRootX + p.relativeX, currentRootY + p.relativeY);
                 targetCtx.rotate(angle);
-                
-                // 應用 X軸正常縮放，Y軸動態假彎曲縮放
-                targetCtx.scale(p.scale, p.scale * legSquash);
+                targetCtx.scale(p.scale, p.scale);
                 targetCtx.drawImage(p.img, -p.pivotX, -p.pivotY);
                 targetCtx.restore();
             }
@@ -664,6 +629,7 @@
             animationId = requestAnimationFrame(drawFrameLive);
         }
 
+        // 🌟 終極真空去背匯出
         function exportGIF() {
             btnExportGIF.disabled = true; btnExportGIF.innerText = "⏳ 正在打包準備發送...";
 
@@ -677,19 +643,27 @@
                 transparent: 0x00FF00, workerScript: gifWorkerUrl || 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
             };
             const gif = new GIF(gifConfig);
-            const framesCount = 20; // 奔跑速度快，減少幀數讓動畫更俐落
+            const framesCount = 30; 
 
             for (let i = 0; i < framesCount; i++) {
                 let t = (i / framesCount) * Math.PI * 2;
-                offScreenCtx.fillStyle = '#00fb00'; offScreenCtx.fillRect(0, 0, offScreenCanvas.width, offScreenCanvas.height);
+                
+                // 真空清空
+                offScreenCtx.clearRect(0, 0, offScreenCanvas.width, offScreenCanvas.height);
+                
                 offScreenCtx.save(); offScreenCtx.scale(scaleFactor, scaleFactor);
                 renderWalkCycleFrame(offScreenCtx, t); offScreenCtx.restore();
                 
+                // 強制二值化 (絕對不產生綠毛邊)
                 const imgData = offScreenCtx.getImageData(0, 0, offScreenCanvas.width, offScreenCanvas.height);
                 const data = imgData.data;
                 for (let j = 0; j < data.length; j += 4) {
-                    if (data[j + 3] < 128) { data[j] = 0; data[j + 1] = 255; data[j + 2] = 0; data[j + 3] = 255; } 
-                    else { data[j + 3] = 255; if (data[j] === 0 && data[j + 1] === 255 && data[j + 2] === 0) data[j + 1] = 254; }
+                    if (data[j + 3] < 128) { 
+                        data[j] = 0; data[j + 1] = 255; data[j + 2] = 0; data[j + 3] = 255; 
+                    } else { 
+                        data[j + 3] = 255; 
+                        if (data[j] === 0 && data[j + 1] === 255 && data[j + 2] === 0) data[j + 1] = 254; 
+                    }
                 }
                 offScreenCtx.putImageData(imgData, 0, 0); gif.addFrame(imgData, { delay: 50 }); 
             }
@@ -698,7 +672,8 @@
                 btnExportGIF.innerText = "🚀 正在飛往大螢幕...";
                 const reader = new FileReader(); reader.readAsDataURL(blob);
                 reader.onloadend = function() {
-                    db.ref('characters').push({ data: reader.result, timestamp: firebase.database.ServerValue.TIMESTAMP })
+                    const base64data = reader.result;
+                    db.ref('characters').push({ data: base64data, timestamp: firebase.database.ServerValue.TIMESTAMP })
                     .then(() => { btnExportGIF.disabled = false; btnExportGIF.innerText = "✅ 發送成功！快去電視找找看！"; })
                     .catch((e) => { alert("上傳失敗了，請檢查網路喔！"); btnExportGIF.disabled = false; btnExportGIF.innerText = "❌ 發送失敗，再試一次"; });
                 }
