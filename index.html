@@ -5,143 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title> ✍🏻 神奇畫畫機 </title>
+    <title>🎈 神奇畫畫機</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { 
-            margin: 0; font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', 'Segoe UI', sans-serif; 
+        html, body { 
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; 
+            font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', 'Segoe UI', sans-serif; 
             background: #e0f7fa; color: #333; 
-            display: flex; flex-direction: column; align-items: center; padding: 15px; 
         }
-        
-        h1 { color: #ff5722; margin-bottom: 5px; text-align: center; font-size: 28px; text-shadow: 2px 2px 0px #fff; }
+
+        .app-container { display: flex; width: 100%; height: 100%; box-sizing: border-box; padding: 15px; gap: 20px; }
+
+        .left-panel { flex: 0 0 360px; display: flex; flex-direction: column; gap: 15px; height: 100%; overflow-y: auto; padding-right: 10px; }
+        .left-panel::-webkit-scrollbar { width: 8px; }
+        .left-panel::-webkit-scrollbar-thumb { background: #b2ebf2; border-radius: 4px; }
+
+        .right-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
+
+        h1 { color: #ff5722; margin: 0 0 5px 0; text-align: center; font-size: 28px; text-shadow: 2px 2px 0px #fff; }
         
         #status-bar {
-            margin-bottom: 15px; font-size: 22px; font-weight: bold; 
-            background: #ffffff; padding: 15px 25px; border-radius: 20px; text-align: center;
-            border: 4px solid #ffeb3b; width: 100%; max-width: 800px; box-sizing: border-box;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1); color: #00796b;
+            font-size: 18px; font-weight: bold; background: #ffffff; padding: 15px; border-radius: 15px; 
+            text-align: center; border: 4px solid #ffeb3b; box-shadow: 0 4px 10px rgba(0,0,0,0.1); color: #00796b;
         }
-        .instructions { font-size: 16px; color: #555; margin-top: 8px; font-weight: normal; }
+        .instructions { font-size: 15px; color: #e65100; margin-top: 8px; font-weight: normal; line-height: 1.4; }
 
-        .top-toolbar { margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        .top-toolbar { display: flex; flex-direction: column; gap: 10px; }
         .main-btn {
-            padding: 15px 30px; font-size: 20px; font-weight: bold; cursor: pointer;
-            border: none; border-radius: 15px; color: white;
-            background-color: #4caf50; transition: all 0.1s; box-shadow: 0 6px 0 #2e7d32; 
+            padding: 15px 20px; font-size: 20px; font-weight: bold; cursor: pointer; border: none; border-radius: 15px; 
+            color: white; background-color: #4caf50; transition: all 0.1s; box-shadow: 0 6px 0 #2e7d32; width: 100%;
         }
-        .main-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #2e7d32; } 
-        
-        .main-btn.danger { background-color: #f44336; box-shadow: 0 6px 0 #c62828; }
+        .main-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #2e7d32; }
+        .main-btn.danger { background-color: #f44336; box-shadow: 0 6px 0 #c62828; font-size: 16px; padding: 10px;}
         .main-btn.danger:active { box-shadow: 0 0 0 #c62828; }
-        
         .main-btn.purple { background-color: #9c27b0; box-shadow: 0 6px 0 #6a1b9a; font-size: 22px;}
         .main-btn.purple:active { box-shadow: 0 0 0 #6a1b9a; }
 
         .tools-panel { 
-            background: white; padding: 15px; border-radius: 20px; border: 3px solid #b2ebf2;
-            margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 12px; 
-            align-items: center; justify-content: center; width: 100%; max-width: 800px; box-sizing: border-box;
+            background: white; padding: 15px; border-radius: 15px; border: 3px solid #b2ebf2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
         }
         
         .tool-btn { 
-            font-size: 16px; font-weight: bold; padding: 10px 15px; border-radius: 12px; 
-            border: 2px solid #ccc; background: #fff; cursor: pointer; transition: 0.2s;
+            font-size: 15px; font-weight: bold; padding: 10px; border-radius: 12px; border: 2px solid #ccc; 
+            background: #fff; cursor: pointer; transition: 0.2s; flex: 1 1 30%; text-align: center;
         }
         .tool-btn.active { background: #ffc107 !important; color: #333 !important; border-color: #ffa000; box-shadow: 0 4px 0 #ffa000; transform: translateY(-2px); }
         .tool-btn:active { transform: translateY(2px); box-shadow: none; }
 
-        .color-palette { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-left: 10px; border-left: 2px dashed #eee; padding-left: 15px;}
-        .color-btn { width: 40px; height: 40px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer; }
-        .color-btn.selected { border: 4px solid #333; transform: scale(1.1); box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        
-        #currentColorPreview { display: inline-block; width: 40px; height: 40px; border-radius: 50%; margin: 0 10px; vertical-align: middle; border: 4px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .size-control { width: 100%; display: flex; align-items: center; background: #f1f8e9; padding: 8px; border-radius: 10px; box-sizing: border-box; justify-content: space-between; }
+        .size-control input { flex: 1; margin: 0 10px; }
 
-        #assemble-tools { display: none; background: #fff9c4; border-color: #fbc02d; }
-        .scale-slider { width: 180px; margin: 0 10px; height: 20px; }
+        .color-palette { width: 100%; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-top: 10px; border-top: 2px dashed #eee; }
+        .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.2); cursor: pointer; }
+        .color-btn.selected { border: 4px solid #333; transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
 
-        .canvas-container {
-            width: 100%; 
-            max-width: 800px;
-            margin-top: 10px;
-        }
+        #assemble-tools { display: none; background: #fff9c4; border-color: #fbc02d; flex-direction: column; }
+        .scale-slider { width: 100%; height: 20px; }
+
+        .canvas-container { width: 100%; max-width: 800px; position: relative; }
         .canvas-wrapper { 
-            position: relative; 
-            width: 100%; 
-            padding-bottom: 75%; 
-            background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%), 
-                              linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), 
-                              linear-gradient(45deg, transparent 75%, #e0e0e0 75%), 
-                              linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
-            background-size: 30px 30px; background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
-            background-color: white; border: 4px solid #b0bec5; border-radius: 15px; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            touch-action: none; 
-            overflow: hidden; 
+            position: relative; width: 100%; padding-bottom: 75%; 
+            background-color: white; border-radius: 15px; border: 4px solid #b0bec5;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); touch-action: none; overflow: hidden; 
         }
         
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
         
-        #referenceCanvas { opacity: 0.25; z-index: 1; } 
-        #mainCanvas { z-index: 2; }                       
-        #previewCanvas { z-index: 3; cursor: crosshair; }                 
+        #bgGridCanvas { z-index: 0; }        
+        #referenceCanvas { z-index: 1; }     
+        #mainCanvas { z-index: 2; }          
+        #previewCanvas { z-index: 3; cursor: crosshair; } 
+
+        @media (max-width: 850px) {
+            .app-container { flex-direction: column; overflow-y: auto; }
+            .left-panel { flex: none; width: 100%; overflow-y: visible; padding-right: 0; }
+            .right-panel { flex: none; width: 100%; padding: 10px; box-sizing: border-box; }
+            html, body { overflow-y: auto; }
+        }
     </style>
 </head>
 <body>
 
-    <h1>✍🏻 神奇畫畫機</h1>
-    
-    <div id="status-bar">
-        <div id="status-title">準備中...</div>
-        <div id="status-desc" class="instructions"></div>
-    </div>
+    <div class="app-container">
+        <div class="left-panel">
+            <h1>🎈 神奇畫畫機</h1>
+            
+            <div id="status-bar">
+                <div id="status-title">🎨 盡情畫畫吧！</div>
+                <div id="status-desc" class="instructions">照著灰色的影子，把手、腳、頭畫在彩色的虛線框裡面喔！(不要超線喔)</div>
+            </div>
 
-    <div class="top-toolbar">
-        <button id="btnNext" class="main-btn" onclick="nextStep()">✅ 畫好了，下一步！</button>
-        <button id="btnAnimate" class="main-btn success" onclick="startAnimation()" style="display:none;">🕺 組合完成，讓他跳舞！</button>
-        <button id="btnExportGIF" class="main-btn purple" onclick="exportGIF()" style="display:none;">🚀 發送到電視大螢幕！</button>
-        <button onclick="location.reload()" class="main-btn danger">🔄 全部重來</button>
-    </div>
+            <div class="top-toolbar">
+                <button id="btnNext" class="main-btn" onclick="processAutoSlice()">✨ 畫好了，變魔法！</button>
+                <button id="btnAnimate" class="main-btn success" onclick="startAnimation()" style="display:none;">🏃 讓他跑起來吧！</button>
+                <button id="btnExportGIF" class="main-btn purple" onclick="exportGIF()" style="display:none;">🚀 發送到電視大螢幕！</button>
+            </div>
 
-    <div id="drawing-tools" class="tools-panel">
-        <button id="pen" class="tool-btn active">✏️ 畫筆</button>
-        <button id="fill" class="tool-btn">🪣 倒色</button>
-        <button id="eraser" class="tool-btn">🧽 擦膠</button>
-        <button id="undo" class="tool-btn">↩️ 倒退</button>
-        <button id="clear" class="tool-btn">🗑️ 清空這一步</button>
-        
-        <div style="display: flex; align-items: center; margin-left: 10px; background: #f1f8e9; padding: 5px 10px; border-radius: 10px;">
-            <span style="font-weight:bold;">粗細:</span> 
-            <input type="range" id="size" min="5" max="80" value="15" style="width: 80px; margin: 0 10px;">
-            <span id="sizeVal" style="display:inline-block; width:30px; font-weight:bold;">15</span>
+            <div id="drawing-tools" class="tools-panel">
+                <button id="pen" class="tool-btn active">✏️ 畫筆</button>
+                <button id="fill" class="tool-btn">🪣 倒色</button>
+                <button id="eraser" class="tool-btn">🧽 擦膠</button>
+                <button id="undo" class="tool-btn">↩️ 倒退</button>
+                <button id="clear" class="tool-btn">🗑️ 全部擦掉</button>
+                
+                <div class="size-control">
+                    <span style="font-weight:bold;">粗細:</span> 
+                    <input type="range" id="size" min="5" max="80" value="15">
+                    <span id="sizeVal" style="display:inline-block; width:30px; font-weight:bold; text-align:right;">15</span>
+                </div>
+                
+                <div class="color-palette">
+                    <input type="color" id="color" value="#000000" style="display:none;"> 
+                    <div class="color-btn selected" data-color="#000000" style="background:#000000"></div>
+                    <div class="color-btn" data-color="#f44336" style="background:#f44336"></div> 
+                    <div class="color-btn" data-color="#ff9800" style="background:#ff9800"></div> 
+                    <div class="color-btn" data-color="#ffeb3b" style="background:#ffeb3b"></div> 
+                    <div class="color-btn" data-color="#4caf50" style="background:#4caf50"></div> 
+                    <div class="color-btn" data-color="#2196f3" style="background:#2196f3"></div> 
+                    <div class="color-btn" data-color="#9c27b0" style="background:#9c27b0"></div> 
+                    <div class="color-btn" data-color="#ffffff" style="background:#ffffff"></div> 
+                </div>
+            </div>
+
+            <div id="assemble-tools" class="tools-panel">
+                <strong style="color: #e65100; font-size: 16px; margin-bottom: 5px;">👇 點選圖片來放大縮小：<span id="selected-part-name" style="color:#000;">尚未選取</span></strong>
+                <input type="range" id="scale-slider" class="scale-slider" min="0.2" max="3" step="0.1" value="1" disabled>
+            </div>
+
+            <button onclick="if(confirm('確定要換一張紙重新開始嗎？')) location.reload()" class="main-btn danger">🔄 換一張紙</button>
         </div>
-        
-        <div class="color-palette">
-            <span id="currentColorPreview" style="background:#000000; margin:0"></span>
-            <input type="color" id="color" value="#000000" style="display:none;"> 
-            <div class="color-btn selected" data-color="#000000" style="background:#000000"></div>
-            <div class="color-btn" data-color="#f44336" style="background:#f44336"></div> 
-            <div class="color-btn" data-color="#ff9800" style="background:#ff9800"></div> 
-            <div class="color-btn" data-color="#ffeb3b" style="background:#ffeb3b"></div> 
-            <div class="color-btn" data-color="#4caf50" style="background:#4caf50"></div> 
-            <div class="color-btn" data-color="#2196f3" style="background:#2196f3"></div> 
-            <div class="color-btn" data-color="#9c27b0" style="background:#9c27b0"></div> 
-            <div class="color-btn" data-color="#ffffff" style="background:#ffffff"></div> 
-        </div>
-    </div>
 
-    <div id="assemble-tools" class="tools-panel">
-        <strong style="color: #e65100; font-size: 18px;">👇 點選圖片來放大縮小：<span id="selected-part-name" style="color:#000;">尚未選取</span></strong>
-        <input type="range" id="scale-slider" class="scale-slider" min="0.2" max="3" step="0.1" value="1" disabled>
-    </div>
-
-    <div class="canvas-container">
-        <div class="canvas-wrapper">
-            <canvas id="referenceCanvas" width="800" height="600"></canvas>
-            <canvas id="mainCanvas" width="800" height="600"></canvas>
-            <canvas id="previewCanvas" width="800" height="600"></canvas>
+        <div class="right-panel">
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="bgGridCanvas" width="800" height="600"></canvas>
+                    <canvas id="referenceCanvas" width="800" height="600"></canvas>
+                    <canvas id="mainCanvas" width="800" height="600"></canvas>
+                    <canvas id="previewCanvas" width="800" height="600"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -161,14 +166,18 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        // ==========================================
 
+        // ==========================================
+        // 畫布與變數設定
+        // ==========================================
         const canvas = document.getElementById('mainCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         const eventLayer = document.getElementById('previewCanvas');
         const pctx = eventLayer.getContext('2d');
         const refCanvas = document.getElementById('referenceCanvas');
         const refCtx = refCanvas.getContext('2d');
+        const bgCanvas = document.getElementById('bgGridCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
 
         const titleText = document.getElementById('status-title');
         const descText = document.getElementById('status-desc');
@@ -183,16 +192,17 @@
         const scaleSlider = document.getElementById('scale-slider');
         const selectedPartNameTxt = document.getElementById('selected-part-name');
 
-        const PARTS_LIST = [
-            { id: 'head', name: '頭部 👦', desc: '請畫一個大大的頭！畫好後按綠色的【畫好了】喔！' },
-            { id: 'torso', name: '身體 👕', desc: '看著淡淡的影子，幫他畫出可愛的身體吧！' },
-            { id: 'rArm', name: '右手 💪', desc: '幫他畫一隻右手！(盡量往下直直畫喔)' },
-            { id: 'rLeg', name: '右腳 🦵', desc: '幫他畫一隻右腳！(盡量往下直直畫喔)' },
-            { id: 'lArm', name: '左手 💪', desc: '再來換畫左手囉！' },
-            { id: 'lLeg', name: '左腳 🦵', desc: '最後畫上左腳，就快完成啦！' }
-        ];
+        // 🌟 重新計算的窄版 T-pose 座標 (中心為 X:400)
+        // 身體寬度從 160 縮窄為 120。手腳也跟著向中心靠攏，維持 100% 貼齊無縫隙。
+        const REGIONS = {
+            head:  { id: 'head',  name: '頭',   x: 320, y: 30,  w: 160, h: 160, px: 0.5,  py: 0.98, color: '#f44336' }, 
+            torso: { id: 'torso', name: '身體', x: 340, y: 190, w: 120, h: 180, px: 0.5,  py: 0.5,  color: '#ff9800' }, 
+            lArm:  { id: 'lArm',  name: '右手', x: 150, y: 190, w: 190, h: 80,  px: 0.95, py: 0.5,  color: '#4caf50' }, // 貼齊 X:340
+            rArm:  { id: 'rArm',  name: '左手', x: 460, y: 190, w: 190, h: 80,  px: 0.05, py: 0.5,  color: '#2196f3' }, // 貼齊 X:460
+            lLeg:  { id: 'lLeg',  name: '右腳', x: 340, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#9c27b0' }, 
+            rLeg:  { id: 'rLeg',  name: '左腳', x: 405, y: 370, w: 55,  h: 160, px: 0.5,  py: 0.05, color: '#e91e63' }  
+        };
         
-        let currentPartIndex = 0;
         let sysMode = 'draw';
         let partsData = {};
         let isDrawing = false;
@@ -203,8 +213,7 @@
         let draggingPart = null;
         let draggingPivot = null;
         let selectedPartKey = null; 
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
+        let dragOffsetX = 0, dragOffsetY = 0;
         let animationId;
         let previewPending = false;
         let walkStartTime = 0;
@@ -215,35 +224,102 @@
             .then(text => {
                 const blob = new Blob([text], {type: 'application/javascript'});
                 gifWorkerUrl = URL.createObjectURL(blob);
-            }).catch(e => console.warn("GIF Worker 載入失敗", e));
+            });
 
-        // 啟動系統！
         initTools();
+        drawBackgroundMannequin();
+        drawGuides();
         resetDrawingState();
-        updateUI();
 
-        // ==================== 繪圖核心與工具 ====================
+        function fillRoundRect(c, x, y, w, h, r) {
+            c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
+            c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r); c.closePath(); c.fill();
+        }
+        function strokeRoundRect(c, x, y, w, h, r) {
+            c.beginPath(); c.moveTo(x + r, y); c.lineTo(x + w - r, y); c.arcTo(x + w, y, x + w, y + r, r);
+            c.lineTo(x + w, y + h - r); c.arcTo(x + w, y + h, x + w - r, y + h, r);
+            c.lineTo(x + r, y + h); c.arcTo(x, y + h, x, y + h - r, r);
+            c.lineTo(x, y + r); c.arcTo(x, y, x + r, y, r); c.closePath(); c.stroke();
+        }
+
+        // 🌟 重新繪製的窄版灰色小人 (嚴格限制在框線內)
+        function drawBackgroundMannequin() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgCtx.fillStyle = '#e4e4e4'; 
+
+            // 1. 窄版身體 (貼齊 y:190~370, x:340~460)
+            bgCtx.beginPath();
+            bgCtx.moveTo(350, 190); bgCtx.lineTo(450, 190);
+            bgCtx.lineTo(450, 350); bgCtx.arcTo(450, 370, 430, 370, 20);
+            bgCtx.lineTo(370, 370); bgCtx.arcTo(350, 370, 350, 350, 20);
+            bgCtx.fill();
+
+            // 2. 頭部
+            bgCtx.fillRect(385, 160, 30, 30); // 脖子
+            bgCtx.beginPath(); bgCtx.arc(400, 105, 55, 0, Math.PI*2); bgCtx.fill(); 
+            bgCtx.beginPath(); bgCtx.arc(340, 105, 12, 0, Math.PI*2); bgCtx.fill(); 
+            bgCtx.beginPath(); bgCtx.arc(460, 105, 12, 0, Math.PI*2); bgCtx.fill(); 
+
+            // 3. 右手 (貼齊右線 x=340)
+            bgCtx.beginPath();
+            bgCtx.moveTo(340, 200); bgCtx.lineTo(180, 200);
+            bgCtx.arcTo(160, 200, 160, 220, 20); bgCtx.arcTo(160, 240, 180, 240, 20);
+            bgCtx.lineTo(340, 240); bgCtx.fill();
+
+            // 4. 左手 (貼齊左線 x=460)
+            bgCtx.beginPath();
+            bgCtx.moveTo(460, 200); bgCtx.lineTo(620, 200);
+            bgCtx.arcTo(640, 200, 640, 220, 20); bgCtx.arcTo(640, 240, 620, 240, 20);
+            bgCtx.lineTo(460, 240); bgCtx.fill();
+
+            // 5. 右腳 (貼齊頂線 y=370)
+            bgCtx.beginPath();
+            bgCtx.moveTo(350, 370); bgCtx.lineTo(385, 370);
+            bgCtx.lineTo(385, 500); bgCtx.arcTo(385, 520, 365, 520, 20);
+            bgCtx.arcTo(350, 520, 350, 500, 20); bgCtx.fill();
+
+            // 6. 左腳 (貼齊頂線 y=370)
+            bgCtx.beginPath();
+            bgCtx.moveTo(415, 370); bgCtx.lineTo(450, 370);
+            bgCtx.lineTo(450, 500); bgCtx.arcTo(450, 520, 430, 520, 20);
+            bgCtx.arcTo(415, 520, 415, 500, 20); bgCtx.fill();
+        }
+
+        function drawGuides() {
+            refCtx.clearRect(0, 0, 800, 600);
+            for (let key in REGIONS) {
+                let r = REGIONS[key];
+                refCtx.lineWidth = 3;
+                refCtx.setLineDash([8, 8]);
+                refCtx.strokeStyle = r.color;
+                refCtx.strokeRect(r.x, r.y, r.w, r.h);
+
+                refCtx.setLineDash([]);
+                refCtx.fillStyle = r.color;
+                refCtx.font = 'bold 20px "Comic Sans MS"';
+                refCtx.textAlign = 'left';
+                refCtx.textBaseline = 'top';
+                refCtx.fillText(r.name, r.x + 5, r.y + 5);
+            }
+        }
+
         function initTools() {
             document.querySelectorAll('.color-btn').forEach(btn => {
-                btn.onclick = () => { 
-                    colorInput.value = btn.dataset.color; 
-                    updateColorPreview(); 
-                }
+                btn.onclick = () => { colorInput.value = btn.dataset.color; updateColorPreview(); }
             });
             colorInput.oninput = updateColorPreview;
             document.getElementById('pen').onclick = () => setDrawMode('pen');
             document.getElementById('eraser').onclick = () => setDrawMode('eraser');
             document.getElementById('fill').onclick = () => setDrawMode('fill');
-            
-            // 💡 修正的重點在這裡：已經移除了 document.getElementById('redo').onclick 的呼叫
             document.getElementById('undo').onclick = () => { if (historyStep > 0) { historyStep--; restoreState(historyStep); } };
-            document.getElementById('clear').onclick = () => { if (confirm('確定要把這一步清空重畫嗎？🖍️')) resetDrawingState(); };
+            document.getElementById('clear').onclick = () => { if (confirm('確定要把畫布全部擦乾淨嗎？')) resetDrawingState(); };
             
             sizeInput.oninput = () => document.getElementById('sizeVal').textContent = sizeInput.value;
             scaleSlider.oninput = (e) => {
                 if (selectedPartKey) {
-                    let newScale = parseFloat(e.target.value);
-                    partsData[selectedPartKey].scale = newScale;
+                    partsData[selectedPartKey].scale = parseFloat(e.target.value);
                     renderAssembly();
                 }
             };
@@ -251,7 +327,6 @@
 
         function updateColorPreview() {
             const col = colorInput.value;
-            document.getElementById('currentColorPreview').style.background = col;
             document.querySelectorAll('.color-btn').forEach(btn => {
                 btn.classList.toggle('selected', btn.dataset.color.toLowerCase() === col.toLowerCase());
             });
@@ -270,17 +345,13 @@
         function getPos(e) {
             const rect = eventLayer.getBoundingClientRect();
             let clientX, clientY;
-
             if (e.type.startsWith('touch')) {
                 const touch = e.touches[0] || e.changedTouches[0];
                 if (!touch) return { x: 0, y: 0 };
-                clientX = touch.clientX;
-                clientY = touch.clientY;
+                clientX = touch.clientX; clientY = touch.clientY;
             } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+                clientX = e.clientX; clientY = e.clientY;
             }
-
             let x = Math.floor((clientX - rect.left) * (canvas.width / rect.width));
             let y = Math.floor((clientY - rect.top) * (canvas.height / rect.height));
             return { x: isNaN(x) ? 0 : x, y: isNaN(y) ? 0 : y };
@@ -326,8 +397,8 @@
 
         function handleStart(e) {
             if (e.type.startsWith('touch') && e.cancelable) e.preventDefault(); 
-
             const pos = getPos(e);
+            
             if (sysMode === 'draw') {
                 if (drawMode === 'fill') { floodFill(pos.x, pos.y); return; }
                 isDrawing = true; 
@@ -335,19 +406,14 @@
                 ctx.lineCap = ctx.lineJoin = 'round';
                 ctx.globalCompositeOperation = drawMode === 'pen' ? 'source-over' : 'destination-out';
                 ctx.strokeStyle = colorInput.value; 
-
-                ctx.beginPath();
-                ctx.moveTo(pos.x, pos.y);
-                ctx.lineTo(pos.x + 0.1, pos.y); 
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(pos.x, pos.y); ctx.lineTo(pos.x + 0.1, pos.y); ctx.stroke();
             } 
             else if (sysMode === 'assemble') {
                 let keys = Object.keys(partsData).reverse(); 
                 for (let key of keys) {
                     let p = partsData[key];
-                    let pivotAbsX = p.x + p.pivotX * p.scale;
-                    let pivotAbsY = p.y + p.pivotY * p.scale;
-                    if (Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY) < 25) {
+                    let pivotAbsX = p.x + p.pivotX * p.scale; let pivotAbsY = p.y + p.pivotY * p.scale;
+                    if (Math.hypot(pos.x - pivotAbsX, pos.y - pivotAbsY) < 30) {
                         draggingPivot = p; selectPart(key); eventLayer.style.cursor = 'crosshair'; return; 
                     }
                 }
@@ -367,19 +433,14 @@
             if (e.type.startsWith('touch') && e.cancelable && (isDrawing || draggingPart || draggingPivot || e.target === eventLayer)) {
                 e.preventDefault();
             }
-
             const pos = getPos(e);
+            
             if (sysMode === 'draw') {
                 if (!previewPending && e.target === eventLayer) { 
-                    previewPending = true; 
-                    requestAnimationFrame(() => { updateBrushPreview(pos.x, pos.y); previewPending = false; }); 
+                    previewPending = true; requestAnimationFrame(() => { updateBrushPreview(pos.x, pos.y); previewPending = false; }); 
                 }
                 if (!isDrawing || drawMode === 'fill') return;
-                
-                ctx.lineTo(pos.x, pos.y); 
-                ctx.stroke(); 
-                ctx.beginPath(); 
-                ctx.moveTo(pos.x, pos.y);
+                ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
             } 
             else if (sysMode === 'assemble') {
                 if (draggingPivot) {
@@ -397,89 +458,97 @@
 
         function handleStop() {
             if (sysMode === 'draw' && isDrawing) { isDrawing = false; saveState(); }
-            if (sysMode === 'assemble') { 
-                draggingPart = null; draggingPivot = null; 
-                eventLayer.style.cursor = 'grab'; 
-            }
+            if (sysMode === 'assemble') { draggingPart = null; draggingPivot = null; eventLayer.style.cursor = 'grab'; }
         }
 
-        eventLayer.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', handleStop);
+        eventLayer.addEventListener('mousedown', handleStart); window.addEventListener('mousemove', handleMove); window.addEventListener('mouseup', handleStop);
         eventLayer.addEventListener('mouseout', () => { pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height); if(sysMode === 'draw' && !isDrawing) handleStop(); });
-        
-        eventLayer.addEventListener('touchstart', handleStart, {passive: false}); 
-        window.addEventListener('touchmove', handleMove, {passive: false}); 
-        window.addEventListener('touchend', handleStop);
+        eventLayer.addEventListener('touchstart', handleStart, {passive: false}); window.addEventListener('touchmove', handleMove, {passive: false}); window.addEventListener('touchend', handleStop);
 
-        function updateUI() {
-            if (currentPartIndex < PARTS_LIST.length) {
-                sysMode = 'draw'; toolsDiv.style.display = 'flex'; assembleDiv.style.display = 'none';
-                refCanvas.style.display = 'block'; 
-                eventLayer.style.cursor = 'crosshair';
+        function processAutoSlice() {
+            partsData = {};
+            let missingParts = [];
+
+            for (let key in REGIONS) {
+                let r = REGIONS[key];
+                let crop = autoCropRegion(r.x, r.y, r.w, r.h);
                 
-                titleText.innerText = `⭐ 第 ${currentPartIndex + 1}/6 步：畫 ${PARTS_LIST[currentPartIndex].name} ⭐`;
-                descText.innerText = PARTS_LIST[currentPartIndex].desc;
-            } else {
-                sysMode = 'assemble'; toolsDiv.style.display = 'none'; assembleDiv.style.display = 'flex';
-                refCanvas.style.display = 'none'; 
-                pctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
-                eventLayer.style.cursor = 'grab'; btnNext.style.display = 'none'; btnAnimate.style.display = 'block';
-                
-                titleText.innerText = `🧩 魔法拼圖時間！`;
-                descText.innerHTML = `把手腳組合起來！拖拉<b style="color:red">「紅色大靶心🎯」</b>來設定關節！`;
-                distributePartsForAssembly(); renderAssembly();
+                if (!crop) {
+                    missingParts.push(r.name);
+                    continue;
+                }
+
+                let absPivotX = r.x + r.w * r.px;
+                let absPivotY = r.y + r.h * r.py;
+                let cropPivotX = absPivotX - crop.offsetX;
+                let cropPivotY = absPivotY - crop.offsetY;
+
+                partsData[r.id] = {
+                    img: crop.img, w: crop.w, h: crop.h,
+                    x: crop.offsetX, y: crop.offsetY, 
+                    scale: 1.0, pivotX: cropPivotX, pivotY: cropPivotY
+                };
             }
-        }
 
-        function nextStep() {
-            if (sysMode !== 'draw') return;
-            const crop = autoCropCanvas();
-            if (!crop) { alert("哎呀！畫布是空的喔，請畫點圖案吧！🖍️"); return; }
-            const pId = PARTS_LIST[currentPartIndex].id;
-            partsData[pId] = {
-                img: crop.img, w: crop.w, h: crop.h, x: 0, y: 0, scale: 1.0,
-                pivotX: crop.w / 2, pivotY: pId === 'head' ? crop.h * 0.9 : pId === 'torso' ? crop.h / 2 : crop.h * 0.1 
-            };
+            if (missingParts.length > 0) {
+                alert(`哎呀！你忘記畫 ${missingParts.join('、')} 了！\n請把每個虛線框框都塗滿喔🖍️`);
+                return;
+            }
+
+            sysMode = 'assemble';
+            toolsDiv.style.display = 'none'; 
+            assembleDiv.style.display = 'flex';
+            refCanvas.style.display = 'none'; 
+            bgCanvas.style.display = 'none';
+            pctx.clearRect(0,0,800,600);
             
-            refCtx.drawImage(canvas, 0, 0); 
-            currentPartIndex++; resetDrawingState(); updateUI();
+            titleText.innerText = `🧩 魔法拼圖完成！`;
+            descText.innerHTML = `如果怪怪的，可以拖拉<b style="color:red">「紅色大靶心🎯」</b>調整關節！<br>沒問題就按下【讓他跑起來吧】！`;
+            
+            btnNext.style.display = 'none'; 
+            btnAnimate.style.display = 'block';
+            eventLayer.style.cursor = 'grab';
+            
+            renderAssembly();
         }
 
-        function autoCropCanvas() {
-            const w = canvas.width, h = canvas.height, imgData = ctx.getImageData(0, 0, w, h).data;
-            let minX = w, minY = h, maxX = 0, maxY = 0, hasPixels = false;
-            for (let y = 0; y < h; y++) {
-                for (let x = 0; x < w; x++) {
-                    if (imgData[(y * w + x) * 4 + 3] > 0) { 
-                        hasPixels = true; if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; if (y > maxY) maxY = y;
+        function autoCropRegion(rx, ry, rw, rh) {
+            const imgData = ctx.getImageData(rx, ry, rw, rh).data;
+            let minX = rw, minY = rh, maxX = 0, maxY = 0, hasPixels = false;
+            
+            for (let y = 0; y < rh; y++) {
+                for (let x = 0; x < rw; x++) {
+                    if (imgData[(y * rw + x) * 4 + 3] > 0) { 
+                        hasPixels = true; 
+                        if (x < minX) minX = x; if (x > maxX) maxX = x; 
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
                     }
                 }
             }
             if (!hasPixels) return null;
-            const pad = 5; minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); maxX = Math.min(w, maxX + pad); maxY = Math.min(h, maxY + pad);
+            
+            const pad = 5; 
+            minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad); 
+            maxX = Math.min(rw, maxX + pad); maxY = Math.min(rh, maxY + pad);
             const cropW = maxX - minX, cropH = maxY - minY;
-            const tmpCanvas = document.createElement('canvas'); tmpCanvas.width = cropW; tmpCanvas.height = cropH;
-            tmpCanvas.getContext('2d').drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
-            return { img: tmpCanvas, w: cropW, h: cropH };
+            
+            const tmpCanvas = document.createElement('canvas'); 
+            tmpCanvas.width = cropW; tmpCanvas.height = cropH;
+            tmpCanvas.getContext('2d').drawImage(canvas, rx + minX, ry + minY, cropW, cropH, 0, 0, cropW, cropH);
+            
+            return { img: tmpCanvas, w: cropW, h: cropH, offsetX: rx + minX, offsetY: ry + minY };
         }
 
         function selectPart(key) {
             selectedPartKey = key;
             if (key) {
-                let partName = PARTS_LIST.find(p => p.id === key).name;
+                let partName = REGIONS[key].name;
                 selectedPartNameTxt.innerText = partName;
                 scaleSlider.disabled = false; scaleSlider.value = partsData[key].scale;
             } else {
                 selectedPartNameTxt.innerText = "尚未選取"; scaleSlider.disabled = true; scaleSlider.value = 1;
             }
             renderAssembly();
-        }
-
-        function distributePartsForAssembly() {
-            partsData.head.x = 350; partsData.head.y = 50; partsData.torso.x = 350; partsData.torso.y = 200;
-            partsData.lArm.x = 100; partsData.lArm.y = 200; partsData.rArm.x = 600; partsData.rArm.y = 200;
-            partsData.lLeg.x = 250; partsData.lLeg.y = 400; partsData.rLeg.x = 450; partsData.rLeg.y = 400;
         }
 
         function renderAssembly() {
@@ -514,12 +583,13 @@
             sysMode = 'animate';
             btnAnimate.style.display = 'none'; assembleDiv.style.display = 'none';
             btnExportGIF.style.display = 'block'; eventLayer.style.cursor = 'default';
-            titleText.innerText = `✨ 哇！你的角色活過來了！✨`;
-            descText.innerText = `點擊紫色按鈕，把它發送到大螢幕上跟大家一起玩！`;
+            titleText.innerText = `✨ 哇！跑起來了！✨`;
+            descText.innerText = `準備好就把他發送到電視大螢幕上跟大家一起玩！`;
 
+            // 為了跑步動態，稍微把整體往上提一點，給腳一點彈跳空間
             const torsoP = partsData.torso;
             const rootX = torsoP.x + torsoP.pivotX * torsoP.scale;
-            const rootY = torsoP.y + torsoP.pivotY * torsoP.scale;
+            const rootY = torsoP.y + torsoP.pivotY * torsoP.scale - 20;
 
             for (let key in partsData) {
                 let p = partsData[key];
@@ -531,9 +601,12 @@
             requestAnimationFrame(drawFrameLive);
         }
 
+        // 🌟 核心進化：專業級奔跑物理引擎 (Dynamic Run Cycle)
         function renderWalkCycleFrame(targetCtx, timeT) {
-            let swing = Math.sin(timeT) * 0.6; 
-            let bounce = Math.abs(Math.sin(timeT * 2)) * 12; 
+            let speed = timeT * 2; // 提升速度變為跑步
+            let swing = Math.sin(speed); 
+            // 強烈的重力彈跳感 (跑起來身體會上下起伏)
+            let bounce = Math.abs(Math.sin(speed * 2)) * 18; 
 
             const torsoP = partsData.torso;
             const rootX = torsoP.x + torsoP.pivotX * torsoP.scale;
@@ -547,15 +620,37 @@
             for (let key of drawOrder) {
                 let p = partsData[key];
                 let angle = 0;
-                if (key === 'lArm' || key === 'rLeg') angle = -swing;
-                if (key === 'rArm' || key === 'lLeg') angle = swing;
-                if (key === 'head') angle = Math.sin(timeT*2) * 0.05; 
-                if (key === 'torso') angle = Math.sin(timeT) * 0.05;  
+                let legSquash = 1; // 用來製作「假膝蓋彎曲」的 Y 軸壓縮比例
+                
+                // 1. 身體與頭部前傾
+                if (key === 'torso') angle = 0.15 + Math.sin(speed * 2) * 0.05; // 身體前傾 + 稍微扭動
+                if (key === 'head') angle = Math.sin(speed * 2) * 0.05; // 頭跟著晃動
+                
+                // 2. 雙手從 T-pose 放下，並誇張擺動
+                let baseArmAngle = 0;
+                if (key === 'lArm') baseArmAngle = -Math.PI * 0.45; // 放下左臂
+                if (key === 'rArm') baseArmAngle = Math.PI * 0.45;  // 放下右臂
+
+                if (key === 'lArm') angle = baseArmAngle - (swing * 0.8);
+                if (key === 'rArm') angle = baseArmAngle + (swing * 0.8);
+                
+                // 3. 雙腳奔跑與「假彎曲 (Fake Knee Bend)」
+                if (key === 'lLeg') {
+                    angle = swing * 0.9;
+                    // 當腳往後拉時 (swing > 0)，Y軸縮短 20%，產生膝蓋彎曲的透視錯覺！
+                    if (swing > 0) legSquash = 1 - (swing * 0.2); 
+                }
+                if (key === 'rLeg') {
+                    angle = -swing * 0.9;
+                    if (swing < 0) legSquash = 1 - (Math.abs(swing) * 0.2);
+                }
 
                 targetCtx.save();
                 targetCtx.translate(currentRootX + p.relativeX, currentRootY + p.relativeY);
                 targetCtx.rotate(angle);
-                targetCtx.scale(p.scale, p.scale);
+                
+                // 應用 X軸正常縮放，Y軸動態假彎曲縮放
+                targetCtx.scale(p.scale, p.scale * legSquash);
                 targetCtx.drawImage(p.img, -p.pivotX, -p.pivotY);
                 targetCtx.restore();
             }
@@ -570,74 +665,50 @@
         }
 
         function exportGIF() {
-            btnExportGIF.disabled = true;
-            btnExportGIF.innerText = "⏳ 正在打包準備發送...";
+            btnExportGIF.disabled = true; btnExportGIF.innerText = "⏳ 正在打包準備發送...";
 
             const scaleFactor = 0.5;
             const offScreenCanvas = document.createElement('canvas');
-            offScreenCanvas.width = canvas.width * scaleFactor;
-            offScreenCanvas.height = canvas.height * scaleFactor;
+            offScreenCanvas.width = canvas.width * scaleFactor; offScreenCanvas.height = canvas.height * scaleFactor;
             const offScreenCtx = offScreenCanvas.getContext('2d', { willReadFrequently: true });
 
             const gifConfig = {
                 workers: 2, quality: 10, width: offScreenCanvas.width, height: offScreenCanvas.height,
-                transparent: 0x00FF00, 
-                workerScript: gifWorkerUrl || 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+                transparent: 0x00FF00, workerScript: gifWorkerUrl || 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
             };
             const gif = new GIF(gifConfig);
-            const framesCount = 30; 
+            const framesCount = 20; // 奔跑速度快，減少幀數讓動畫更俐落
 
             for (let i = 0; i < framesCount; i++) {
                 let t = (i / framesCount) * Math.PI * 2;
-                offScreenCtx.fillStyle = '#00fb00';
-                offScreenCtx.fillRect(0, 0, offScreenCanvas.width, offScreenCanvas.height);
-                offScreenCtx.save();
-                offScreenCtx.scale(scaleFactor, scaleFactor);
-                renderWalkCycleFrame(offScreenCtx, t);
-                offScreenCtx.restore();
+                offScreenCtx.fillStyle = '#00fb00'; offScreenCtx.fillRect(0, 0, offScreenCanvas.width, offScreenCanvas.height);
+                offScreenCtx.save(); offScreenCtx.scale(scaleFactor, scaleFactor);
+                renderWalkCycleFrame(offScreenCtx, t); offScreenCtx.restore();
                 
                 const imgData = offScreenCtx.getImageData(0, 0, offScreenCanvas.width, offScreenCanvas.height);
                 const data = imgData.data;
                 for (let j = 0; j < data.length; j += 4) {
-                    if (data[j + 3] < 128) {
-                        data[j] = 0; data[j + 1] = 255; data[j + 2] = 0; data[j + 3] = 255; 
-                    } else {
-                        data[j + 3] = 255; 
-                        if (data[j] === 0 && data[j + 1] === 255 && data[j + 2] === 0) data[j + 1] = 254; 
-                    }
+                    if (data[j + 3] < 128) { data[j] = 0; data[j + 1] = 255; data[j + 2] = 0; data[j + 3] = 255; } 
+                    else { data[j + 3] = 255; if (data[j] === 0 && data[j + 1] === 255 && data[j + 2] === 0) data[j + 1] = 254; }
                 }
-                offScreenCtx.putImageData(imgData, 0, 0);
-                gif.addFrame(imgData, { delay: 50 }); 
+                offScreenCtx.putImageData(imgData, 0, 0); gif.addFrame(imgData, { delay: 50 }); 
             }
 
             gif.on('finished', function(blob) {
                 btnExportGIF.innerText = "🚀 正在飛往大螢幕...";
-                const reader = new FileReader();
-                reader.readAsDataURL(blob);
+                const reader = new FileReader(); reader.readAsDataURL(blob);
                 reader.onloadend = function() {
-                    const base64data = reader.result;
-                    db.ref('characters').push({
-                        data: base64data,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    }).then(() => {
-                        btnExportGIF.disabled = false;
-                        btnExportGIF.innerText = "✅ 發送成功！你可以去電視上找找看囉！";
-                    }).catch((error) => {
-                        console.error("上傳失敗：", error);
-                        alert("上傳失敗了，請請教老師幫忙確認網路喔！");
-                        btnExportGIF.disabled = false;
-                        btnExportGIF.innerText = "❌ 發送失敗，再試一次";
-                    });
+                    db.ref('characters').push({ data: reader.result, timestamp: firebase.database.ServerValue.TIMESTAMP })
+                    .then(() => { btnExportGIF.disabled = false; btnExportGIF.innerText = "✅ 發送成功！快去電視找找看！"; })
+                    .catch((e) => { alert("上傳失敗了，請檢查網路喔！"); btnExportGIF.disabled = false; btnExportGIF.innerText = "❌ 發送失敗，再試一次"; });
                 }
             });
-
             gif.render();
         }
 
         document.addEventListener('keydown', e => {
             if (sysMode !== 'draw') return;
             if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); document.getElementById('undo').click(); }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); /* Redo removed */ }
         });
     </script>
 </body>
